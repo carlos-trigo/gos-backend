@@ -3,8 +3,9 @@ import { DB_HOST, DB_URI_POOLER, DB_URI_DIRECT } from "../constants";
 import { Skater, SkaterInsert } from "../types";
 import {
   getAllSkaters,
+  getFriendsByEmail,
+  getSkaterByEmail,
   getSkaterById,
-  getSkaterByName,
 } from "./queries/skater.query";
 
 export class DB {
@@ -31,10 +32,17 @@ export class DB {
     return (await this.pool.query<Skater>(query, args)).rows[0];
   }
 
-  async getSkaterByName(name: string) {
+  async getSkaterByEmail(name: string) {
     console.info(`Getting skater by name: [${name}]`);
 
-    const { query, args } = getSkaterByName(name);
+    const { query, args } = getSkaterByEmail(name);
+    return (await this.pool.query<Skater>(query, args)).rows[0];
+  }
+
+  async getFriends(email: string) {
+    console.info(`Getting friends: [${email}]`);
+
+    const { query, args } = getFriendsByEmail(email);
     return (await this.pool.query<Skater>(query, args)).rows[0];
   }
 

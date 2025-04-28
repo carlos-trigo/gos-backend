@@ -4,6 +4,7 @@ import { dataConstraints } from "../constants";
 import { SkaterInsert } from "../types";
 import { isBoolean, isValidString } from "./validation";
 import { BadRequestError, NotFoundError } from "../util/errors";
+import { log } from "console";
 
 /** Handles express requests using db class */
 export class Controller {
@@ -27,22 +28,30 @@ export class Controller {
     res.status(200).send(result);
   };
 
-  GET_BY_NAME: RequestHandler = async (req, res) => {
-    const parsedName = isValidString(req.params.name);
-    const result = await this.db.getSkaterByName(parsedName);
+  GET_BY_EMAIL: RequestHandler = async (req, res) => {
+    const parsedEmail = isValidString(
+      req.params.email,
+      undefined,
+      dataConstraints.skater.email.regex
+    );
+    const result = await this.db.getSkaterByEmail(parsedEmail);
     if (!result)
-      throw new NotFoundError(`No skaters found with name ${parsedName}`);
+      throw new NotFoundError(`No skaters found with email ${parsedEmail}`);
 
     res.status(200).send(result);
   };
 
-  USER: RequestHandler = async (req, res) => {
+  LOGIN: RequestHandler = async (req, res) => {
     const { name, email, email_verified, picture } = req.body;
-    if (!(name && email && email_verified))
-      throw new BadRequestError("Request is missing param");
+    if (
+      name === undefined ||
+      email === undefined ||
+      email_verified === undefined
+    )
+      throw new BadRequestError("Request is missing name param");
 
-    const skater = await this.db.getSkaterByName(name);
-
+    const skater = await this.db.getSkaterByEmail(name);
+    log(skater);
     if (!skater) {
       const newSkater: SkaterInsert = {
         name: isValidString(name, dataConstraints.skater.name),
@@ -57,5 +66,6 @@ export class Controller {
       const result = await this.db.addSkater(newSkater);
       res.status(200).send(result.rows);
     }
+    res.status(200).send(skater);
   };
 }

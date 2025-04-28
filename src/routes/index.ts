@@ -9,9 +9,11 @@ export const newRouter = (deps: { db: DB }) => {
 
   router.get(`/skaters`, controller.GET_ALL);
   router.get(`/skater/:id`, controller.GET_BY_ID);
-  router.get(`/skater/:name`, controller.GET_BY_NAME);
+  router.get(`/skater/:email`, controller.GET_BY_EMAIL);
 
-  router.post(`/user`, controller.USER);
+  router.get(`/friends/:email`, controller.GET_BY_EMAIL);
+
+  router.post(`/auth`, controller.LOGIN);
 
   return router;
 };

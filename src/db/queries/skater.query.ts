@@ -3,9 +3,15 @@ export const getSkaterById = (id: string) => ({
   args: [id],
 });
 
-export const getSkaterByName = (name: string) => ({
-  query: "SELECT * FROM skater WHERE name=$1",
-  args: [name],
+export const getSkaterByEmail = (email: string) => ({
+  query: "SELECT * FROM skater WHERE email=$1",
+  args: [email],
+});
+
+export const getFriendsByEmail = (email: string) => ({
+  query:
+    "SELECT * FROM friends WHERE (skaterA=$1 OR skaterB=$1) ORDER BY created_at DESC",
+  args: [email],
 });
 
 export const getAllSkaters = "SELECT * FROM skater ORDER BY created_at DESC";
