@@ -34,7 +34,7 @@ const startup = async () => {
   });
 
   const db = new DB();
-
+  app.set("trust proxy", 1);
   app.use(
     cors({
       origin: AUTH0_CLIENT_ORIGIN_URL,
