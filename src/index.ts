@@ -6,6 +6,7 @@ import {
   NODE_ENV,
   PARAMETER_LIMIT,
   AUTH0_CLIENT_ORIGIN_URL,
+  CORS_ALLOWED_ORIGINS,
 } from "./constants";
 import { DB } from "./db";
 import { newRouter } from "./routes";
@@ -37,7 +38,7 @@ const startup = async () => {
   app.set("trust proxy", 1);
   app.use(
     cors({
-      origin: AUTH0_CLIENT_ORIGIN_URL,
+      origin: CORS_ALLOWED_ORIGINS,
       methods: ["GET", "POST", "PUT"],
       allowedHeaders: ["Authorization", "Content-Type"],
       maxAge: 86400,
