@@ -4,13 +4,14 @@
   "main": "index.js",
   "author": "Carlos Trigo <ctrigose@gmail.com>",
   "scripts": {
-    "build": "tsc",
+    "build": "patch-package && tsc",
     "start:dev": "nodemon src/index.ts",
     "start:prod": "node dist/index.js",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix",
     "test": "jest",
-    "clear-port-80": "sudo lsof -t -i tcp:80 -s tcp:listen | sudo xargs kill"
+    "clear-port-80": "sudo lsof -t -i tcp:80 -s tcp:listen | sudo xargs kill",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@jest/globals": "29.7.0",
