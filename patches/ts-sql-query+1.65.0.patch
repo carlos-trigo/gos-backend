@@ -1,0 +1,17 @@
+diff --git a/node_modules/ts-sql-query/expressions/dynamicConditionUsingFilters.d.ts b/node_modules/ts-sql-query/expressions/dynamicConditionUsingFilters.d.ts
+index 4185b57..fd51862 100644
+--- a/node_modules/ts-sql-query/expressions/dynamicConditionUsingFilters.d.ts
++++ b/node_modules/ts-sql-query/expressions/dynamicConditionUsingFilters.d.ts
+@@ -252,10 +252,12 @@ export type DynamicFilter<DEFINITION extends Filterable> = {
+     [KEY in keyof DEFINITION]?: DEFINITION[KEY] extends AnyValueSource ? MapValueSourceToFilter<DEFINITION[KEY]> : DEFINITION[KEY] extends Filterable ? DynamicFilter<DEFINITION[KEY]> : never;
+ };
+ export interface DynamicConditionExpression<DEFINITION extends Filterable, EXTENSION extends DinamicConditionExtension> {
++    // @ts-ignore
+     withValues(filter: DynamicFilter<DEFINITION>): BooleanValueSource<TableOfCondition<DEFINITION> | TableOfConditionExtention<EXTENSION>, BooleanOptionalTypeOfCondition<DEFINITION> | BooleanOptionalTypeOfConditionExtension<EXTENSION>>;
+ }
+ export type TableOfValueSource<TYPE> = TYPE extends ValueSourceOf<infer T> ? T : never;
+ export type OptionalTypeOfValueSource<TYPE> = TYPE extends IValueSource<any, any, any, infer T> ? T : never;
++// @ts-ignore
+ type BooleanOptionalTypeOfCondition<DEFINITION extends Filterable> = MergeOptionalUnion<({
+     [KEY in keyof DEFINITION]: DEFINITION[KEY] extends AnyValueSource ? OptionalTypeOfValueSource<DEFINITION[KEY]> : DEFINITION[KEY] extends Filterable ? BooleanOptionalTypeOfCondition<DEFINITION[KEY]> : never;
+ })[keyof DEFINITION]>;
