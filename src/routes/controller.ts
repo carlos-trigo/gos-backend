@@ -16,7 +16,7 @@ export class Controller {
 
   GET_ALL: RequestHandler = async (req, res) => {
     const result = await this.db.getAllSkaters();
-    res.status(200).send(result.rows);
+    res.status(200).send(result);
   };
 
   GET_BY_ID: RequestHandler = async (req, res) => {
@@ -48,7 +48,7 @@ export class Controller {
       email === undefined ||
       email_verified === undefined
     )
-      throw new BadRequestError("Request is missing name param");
+      throw new BadRequestError("Request is missing param");
 
     const skater = await this.db.getSkaterByEmail(name);
     log(skater);
@@ -67,5 +67,47 @@ export class Controller {
       res.status(200).send(result.rows);
     }
     res.status(200).send(skater);
+  };
+
+  UI_ADD_FRIENDS: RequestHandler = async (req, res) => {
+    const email = isValidString(
+      req.params.email,
+      undefined,
+      dataConstraints.skater.email.regex
+    );
+    if (email === undefined)
+      throw new BadRequestError("Request is missing name param");
+
+    const skaterId = await this.db.getSkaterIdByEmail(email);
+    if (!skaterId)
+      throw new BadRequestError("We can't seem to find your profile");
+
+    const currentFriends = await this.db.getFriends(skaterId);
+    const pendingFriends = await this.db.getPendingFriendRequests(skaterId);
+    const allSkaters = await this.db.getAllSkaters();
+
+    const result = allSkaters.map((skater) => {
+      if (currentFriends.includes(skater))
+        skater.friendRequestStatus = "approved";
+      else if (pendingFriends.includes(skater))
+        skater.friendRequestStatus = "pending";
+      else skater.friendRequestStatus = "none";
+      return skater;
+    });
+
+    res.status(200).send(result);
+  };
+
+  PROCESS_FRIEND_REQUEST: RequestHandler = async (req, res) => {
+    const { requesterEmail, targetId: target_id } = req.body;
+
+    if (requesterEmail === undefined || target_id === undefined)
+      throw new BadRequestError("Request is missing name param");
+
+    const requester_id = await this.db.getSkaterIdByEmail(requesterEmail);
+
+    const result = await this.db.processFriendRequest(requester_id, target_id);
+
+    res.status(200).send(result);
   };
 }

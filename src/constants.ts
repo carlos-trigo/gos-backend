@@ -38,3 +38,9 @@ export const dataConstraints = {
     },
   },
 };
+
+export const SKATER_CONNECTION_TYPE = {
+  friend: "friend",
+  block: "block",
+  archnemesis: "archnemesis",
+} as const;
