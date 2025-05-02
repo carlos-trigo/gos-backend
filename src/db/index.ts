@@ -44,7 +44,7 @@ export class DB {
     const allSkater = (await this.pool.query(getAllSkaters)).rows;
 
     if (allSkater && isSkaterArray(allSkater)) return allSkater;
-    throw new error(
+    throw new Error(
       "Cannot get all skaters: invalid type returned by the database"
     );
   }
@@ -56,7 +56,7 @@ export class DB {
     const [skater] = (await this.pool.query(query, args)).rows;
 
     if (skater && isSkater(skater)) return skater;
-    throw new error(
+    throw new Error(
       "Cannot get skater by email: invalid type returned by the database - " +
         id
     );
@@ -67,9 +67,8 @@ export class DB {
 
     const { query, args } = getSkaterByEmail(email);
     const [skater] = (await this.pool.query(query, args)).rows;
-
-    if (skater && isSkater(skater)) return skater;
-    throw new error(
+    if ((skater && isSkater(skater)) || !skater) return skater;
+    throw new Error(
       "Cannot get skater by email: invalid type returned by the database - " +
         email
     );
@@ -81,7 +80,7 @@ export class DB {
     const { query, args } = getSkaterIdByEmail(email);
     const [{ id: skaterId }] = (await this.pool.query(query, args)).rows;
     if (skaterId && isValidString(skaterId)) return skaterId;
-    throw new error(
+    throw new Error(
       "Cannot get skater id by email: invalid type returned by the database - " +
         email
     );
@@ -94,7 +93,7 @@ export class DB {
     const friends = (await this.pool.query(query, args)).rows;
 
     if (friends && isSkaterArray(friends)) return friends;
-    throw new error(
+    throw new Error(
       "Cannot get skater friends: invalid type returned by the database - " + id
     );
   }
@@ -114,7 +113,7 @@ export class DB {
 
     if (pendingFriendRequests && isSkaterConnectionArray(pendingFriendRequests))
       return pendingFriendRequests;
-    throw new error(
+    throw new Error(
       "Cannot get pending friend requests: invalid type returned by the database - " +
         skaterId
     );

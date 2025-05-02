@@ -6,6 +6,7 @@ export interface Skater {
   email_verified: boolean;
   created_at: Date;
   updated_at: Date;
+  auth0_sub: string;
 
   friendRequestStatus?: "approved" | "pending" | "rejected" | "none";
 }
@@ -15,6 +16,7 @@ export interface SkaterInsert {
   email: string;
   picture: string;
   email_verified: boolean;
+  auth0_sub: string;
 }
 
 export interface SkaterConnection {

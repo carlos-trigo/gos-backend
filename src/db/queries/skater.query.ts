@@ -16,8 +16,14 @@ export const getSkaterIdByEmail = (email: string) => ({
 });
 
 export const addSkater = (skater: SkaterInsert) => ({
-  query: `INSERT INTO "skater" (name, email, picture, email_verified) VALUES ($1, $2, $3, $4)`,
-  args: [skater.name, skater.email, skater.picture, skater.email_verified],
+  query: `INSERT INTO "skater" (name, email, picture, email_verified, auth0_sub) VALUES ($1, $2, $3, $4, $5)`,
+  args: [
+    skater.name,
+    skater.email,
+    skater.picture,
+    skater.email_verified,
+    skater.auth0_sub,
+  ],
 });
 
 export const getAllSkaters = "SELECT * FROM skater ORDER BY created_at DESC";

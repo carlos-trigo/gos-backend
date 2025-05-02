@@ -43,6 +43,8 @@ export class Controller {
 
   LOGIN: RequestHandler = async (req, res) => {
     const { name, email, email_verified, picture } = req.body;
+    const auth0_sub = req.auth.payload.sub;
+    if (!auth0_sub) throw new BadRequestError("Request is missing auth0_sub");
     if (
       name === undefined ||
       email === undefined ||
@@ -51,7 +53,6 @@ export class Controller {
       throw new BadRequestError("Request is missing param");
 
     const skater = await this.db.getSkaterByEmail(name);
-    log(skater);
     if (!skater) {
       const newSkater: SkaterInsert = {
         name: isValidString(name, dataConstraints.skater.name),
@@ -62,7 +63,9 @@ export class Controller {
         ),
         email_verified: isBoolean(email_verified),
         picture,
+        auth0_sub,
       };
+      console.log(JSON.stringify(skater));
       const result = await this.db.addSkater(newSkater);
       res.status(200).send(result.rows);
     }
