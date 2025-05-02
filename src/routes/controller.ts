@@ -52,7 +52,7 @@ export class Controller {
     )
       throw new BadRequestError("Request is missing param");
 
-    const skater = await this.db.getSkaterByEmail(name);
+    const skater = await this.db.getSkaterByEmail(email);
     if (!skater) {
       const newSkater: SkaterInsert = {
         name: isValidString(name, dataConstraints.skater.name),
