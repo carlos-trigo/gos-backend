@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS skater(
   email_verified BOOLEAN NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::TEXT, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::TEXT, NOW()) NOT NULL,
+  auth0_sub text NOT NULL;
 );
 
 -- INSERT skater
@@ -33,5 +34,5 @@ CREATE TYPE connection_type AS ENUM ('friend', 'block', 'archnemesis');
 
 -- INSERT -- INSERT skater
 INSERT INTO skater_connection(
-	skater_a, skater_a, connection_type, requested_by, approved)
-	VALUES ('NAME', 'name@gmail.com', 'TEST', TRUE);
+	skater_a, skater_a, connection_type, requested_by)
+	VALUES ('id_a', 'id_b', 'friend', 'id_a');

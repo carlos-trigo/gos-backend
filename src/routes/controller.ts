@@ -1,10 +1,9 @@
 import { RequestHandler } from "express";
 import { DB } from "../db/index";
 import { dataConstraints } from "../constants";
-import { SkaterInsert } from "../types";
+import { Skater, SkaterInsert } from "../types";
 import { isBoolean, isValidString } from "./validation";
 import { BadRequestError, NotFoundError } from "../util/errors";
-import { log } from "console";
 
 /** Handles express requests using db class */
 export class Controller {
@@ -67,49 +66,91 @@ export class Controller {
       };
       console.log(JSON.stringify(skater));
       const result = await this.db.addSkater(newSkater);
-      res.status(200).send(result.rows);
+      res.status(200).send(result);
     }
     res.status(200).send(skater);
   };
 
   UI_ADD_FRIENDS: RequestHandler = async (req, res) => {
-    const email = isValidString(
-      req.params.email,
-      undefined,
-      dataConstraints.skater.email.regex
-    );
-    if (email === undefined)
-      throw new BadRequestError("Request is missing name param");
-
-    const skaterId = await this.db.getSkaterIdByEmail(email);
-    if (!skaterId)
+    if (!req.skater)
       throw new BadRequestError("We can't seem to find your profile");
 
-    const currentFriends = await this.db.getFriends(skaterId);
-    const pendingFriends = await this.db.getPendingFriendRequests(skaterId);
+    const { id: skaterId } = req.skater;
+    const currentFriends = (await this.db.getFriends(skaterId)).map(
+      (skater) => ({ ...skater, friendRequestStatus: "approved" })
+    );
+    const pendingFriends = (
+      await this.db.getPendingFriendRequests(skaterId)
+    ).map((skater) => ({ ...skater, friendRequestStatus: "pending" }));
     const allSkaters = await this.db.getAllSkaters();
 
-    const result = allSkaters.map((skater) => {
-      if (currentFriends.includes(skater))
-        skater.friendRequestStatus = "approved";
-      else if (pendingFriends.includes(skater))
-        skater.friendRequestStatus = "pending";
-      else skater.friendRequestStatus = "none";
-      return skater;
+    const processedSkaters = allSkaters.map((skater) => {
+      const skaterWithStatus = { ...skater, friendRequestStatus: "none" };
+      if (
+        pendingFriends.some(
+          (friend) => friend.id === skater.id //|| friend.skater_b === skater.id
+        )
+      ) {
+        skaterWithStatus.friendRequestStatus = "pending";
+      }
+      if (
+        currentFriends.some(
+          (friend) => friend.id === skater.id //|| friend.skater_b === skater.id
+        )
+      ) {
+        skaterWithStatus.friendRequestStatus = "approved";
+      }
+      return skaterWithStatus;
     });
+
+    res.status(200).send({
+      friends: currentFriends,
+      pendingFriends,
+      allSkaters: processedSkaters,
+    });
+  };
+
+  PROCESS_FRIEND_REQUEST: RequestHandler = async (req, res) => {
+    if (!req.skater.id)
+      throw new BadRequestError("We can't seem to find your profile");
+
+    const { id: target_id } = req.params;
+    const { id: requester_id } = req.skater;
+
+    if (target_id === undefined)
+      throw new BadRequestError("Request is missing id param");
+
+    const result = await this.db.processFriendRequest(requester_id, target_id);
 
     res.status(200).send(result);
   };
 
-  PROCESS_FRIEND_REQUEST: RequestHandler = async (req, res) => {
-    const { requesterEmail, targetId: target_id } = req.body;
+  ACCEPT_FRIEND_REQUEST: RequestHandler = async (req, res) => {
+    if (!req.skater)
+      throw new BadRequestError("We can't seem to find your profile");
 
-    if (requesterEmail === undefined || target_id === undefined)
-      throw new BadRequestError("Request is missing name param");
+    const { id: target_id } = req.params;
+    const { id: requester_id } = req.skater;
 
-    const requester_id = await this.db.getSkaterIdByEmail(requesterEmail);
+    if (target_id === undefined)
+      throw new BadRequestError("Request is missing id param");
 
-    const result = await this.db.processFriendRequest(requester_id, target_id);
+    const result = await this.db.acceptFriendRequest(requester_id, target_id);
+
+    res.status(200).send(result);
+  };
+
+  REJECT_FRIEND_REQUEST: RequestHandler = async (req, res) => {
+    if (!req.skater)
+      throw new BadRequestError("We can't seem to find your profile");
+
+    const { id: target_id } = req.params;
+    const { id: requester_id } = req.skater;
+
+    if (target_id === undefined)
+      throw new BadRequestError("Request is missing id param");
+
+    const result = await this.db.rejectFriendRequest(requester_id, target_id);
 
     res.status(200).send(result);
   };

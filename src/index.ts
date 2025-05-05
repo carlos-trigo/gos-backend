@@ -14,6 +14,7 @@ import { createErrorMiddleware } from "./util/error-middleware";
 import { expressConfig } from "./util/express-config";
 import cors from "cors";
 import { validateAccessToken } from "./middleware/validate-access-token.middleware";
+import { loadContext } from "./middleware/load-context.middleware";
 
 const shutdown =
   (deps: { server: http.Server; db: DB }) => async (): Promise<void> => {
@@ -46,6 +47,7 @@ const startup = async () => {
   );
 
   app.use(validateAccessToken);
+  app.use(await loadContext(db.connection));
   app.use(newRouter({ db }));
 
   const errorMiddleware = createErrorMiddleware();

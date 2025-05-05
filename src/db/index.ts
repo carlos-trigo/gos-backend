@@ -11,8 +11,11 @@ import {
   getSkaterIdByEmail,
 } from "./queries/skater.query";
 import {
+  acceptFriendRequest,
+  addFriendRequest,
   getFriendsById,
   getPendingFriendRequests,
+  rejectFriendRequest,
 } from "./queries/skater-connection.query";
 import {
   isSkater,
@@ -20,11 +23,9 @@ import {
   isSkaterConnectionArray,
   isValidString,
 } from "../routes/validation";
-import { error } from "console";
 import { PostgreSqlConnection } from "ts-sql-query/connections/PostgreSqlConnection";
-import { tSkaterConnection } from "./tables";
 
-export class DBConnection extends PostgreSqlConnection<"DBConnection"> {}
+export class DbConnection extends PostgreSqlConnection<"DBConnection"> {}
 export class DB {
   client: Client;
   pool: Pool;
@@ -34,7 +35,7 @@ export class DB {
     console.info("Creating db instance...");
     this.client = new Client({ connectionString: DB_URI_DIRECT });
     this.pool = new Pool({ connectionString: DB_URI_POOLER });
-    this.connection = new DBConnection(new PgPoolQueryRunner(this.pool));
+    this.connection = new DbConnection(new PgPoolQueryRunner(this.pool));
     console.info("Db connected: ", DB_HOST);
   }
 
@@ -52,8 +53,7 @@ export class DB {
   async getSkaterById(id: string) {
     console.info(`Getting skater by id: [${id}]`);
 
-    const { query, args } = getSkaterById(id);
-    const [skater] = (await this.pool.query(query, args)).rows;
+    const skater = getSkaterById(id, this.connection);
 
     if (skater && isSkater(skater)) return skater;
     throw new Error(
@@ -65,8 +65,8 @@ export class DB {
   async getSkaterByEmail(email: string) {
     console.info(`Getting skater by email: [${email}]`);
 
-    const { query, args } = getSkaterByEmail(email);
-    const [skater] = (await this.pool.query(query, args)).rows;
+    const skater = getSkaterByEmail(email, this.connection);
+
     if ((skater && isSkater(skater)) || !skater) return skater;
     throw new Error(
       "Cannot get skater by email: invalid type returned by the database - " +
@@ -77,8 +77,8 @@ export class DB {
   async getSkaterIdByEmail(email: string): Promise<string> {
     console.info(`Getting skater by name: [${email}]`);
 
-    const { query, args } = getSkaterIdByEmail(email);
-    const [{ id: skaterId }] = (await this.pool.query(query, args)).rows;
+    const skaterId = getSkaterIdByEmail(email, this.connection);
+
     if (skaterId && isValidString(skaterId)) return skaterId;
     throw new Error(
       "Cannot get skater id by email: invalid type returned by the database - " +
@@ -89,8 +89,7 @@ export class DB {
   async getFriends(id: string) {
     console.info(`Getting friends: [${id}]`);
 
-    const { query, args } = getFriendsById(id);
-    const friends = (await this.pool.query(query, args)).rows;
+    const friends = await getFriendsById(id, this.connection);
 
     if (friends && isSkaterArray(friends)) return friends;
     throw new Error(
@@ -101,15 +100,16 @@ export class DB {
   async addSkater(skater: SkaterInsert) {
     console.info(`Creating new skater: [${JSON.stringify(skater)}]`);
 
-    const { query, args } = addSkater(skater);
-    return await this.pool.query(query, args);
+    return addSkater(skater, this.connection);
   }
 
   async getPendingFriendRequests(skaterId: string) {
     console.info(`Getting pending friend requests for skater: [${skaterId}]`);
 
-    const { query, args } = getPendingFriendRequests(skaterId);
-    const pendingFriendRequests = (await this.pool.query(query, args)).rows;
+    const pendingFriendRequests = await getPendingFriendRequests(
+      skaterId,
+      this.connection
+    );
 
     if (pendingFriendRequests && isSkaterConnectionArray(pendingFriendRequests))
       return pendingFriendRequests;
@@ -124,16 +124,23 @@ export class DB {
       `Processing friend request from ${requesterId} for ${targetId}`
     );
 
-    return await this.connection
-      .insertInto(tSkaterConnection)
-      .set({
-        skater_a: requesterId,
-        skater_b: targetId,
-        type: "friend",
-        requestedBy: requesterId,
-      })
-      .returningLastInsertedId()
-      .executeInsert();
+    return await addFriendRequest(requesterId, targetId, this.connection);
+  }
+
+  async acceptFriendRequest(requesterId: string, targetId: string) {
+    console.info(
+      `Accepting friend request from ${requesterId} for ${targetId}`
+    );
+
+    return await acceptFriendRequest(requesterId, targetId, this.connection);
+  }
+
+  async rejectFriendRequest(requesterId: string, targetId: string) {
+    console.info(
+      `Rejecting friend request from ${requesterId} for ${targetId}`
+    );
+
+    return await rejectFriendRequest(requesterId, targetId, this.connection);
   }
 
   async close() {

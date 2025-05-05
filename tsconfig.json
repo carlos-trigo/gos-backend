@@ -11,7 +11,8 @@
     "paths": {
       "*": ["node_modules/*"],
       "src/*": ["./src/*"]
-    }
+    },
+    "typeRoots": ["@types"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "@types/express/index.d.ts"]
 }
